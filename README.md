@@ -44,7 +44,7 @@ Este projeto contém uma análise exploratória de dados do dataset da competiç
 
 3. **Execute as células sequencialmente**
 
-## 📁 Estrutura do Projeto
+<!--## 📁 Estrutura do Projeto
 
 ```
 sbd2/
@@ -54,7 +54,7 @@ sbd2/
 │   └── Dicionário_de_Dados_train.csv.md  # Documentação dos dados
 ├── requirements.txt              # Dependências do projeto
 └── README.md                     # Este arquivo
-```
+```-->
 
 ## 📚 Bibliotecas Principais Utilizadas
 
@@ -81,10 +81,11 @@ Se você encontrar problemas de memória, considere:
 ### Problemas com encoding:
 Se houver problemas com caracteres especiais, certifique-se de que o arquivo CSV está em UTF-8.
 
-## 📈 Próximos Passos
+<!--## 📈 Próximos Passos
 
 Este notebook contém apenas a análise exploratória inicial. Os próximos passos incluem:
 - Limpeza e tratamento de dados ausentes
 - Engenharia de features
 - Modelagem de Machine Learning
 - Avaliação e otimização de modelos
+-->
