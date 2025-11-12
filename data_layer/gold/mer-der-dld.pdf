@@ -1,0 +1,10 @@
+MER / DER / DLD (versão em texto gerada como placeholder para o PDF)
+
+See docs/modeling/MER_DER_DLD.md for full markdown source.
+
+Resumo (trechos):
+- Star schema: f_incident (fato) + dimensiones: d_time, d_organization, d_detector, d_alert
+- Regras: timestamp -> d_time, orgid -> d_organization.organization_external_id, detectorid -> d_detector.detector_external_id
+- Transformações: trim, normalização countrycode para ISO2, mitretechniques mantido como texto (lista separada por `;`)
+
+Observação: este arquivo é um placeholder PDF (conteúdo em texto). Se você quiser um PDF binário real, posso gerar usando um utilitário local (pandoc) ou orientá-lo a transformar o .md em .pdf.

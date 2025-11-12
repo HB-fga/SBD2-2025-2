@@ -1,0 +1,20 @@
+Mnemônicos e Convenções de Nomenclatura (versão em texto para PDF placeholder)
+
+- Prefixos:
+  - f_ : tabela fato (ex: `f_incident`)
+  - d_ : tabela dimensão (ex: `d_organization`)
+  - stg_ : tabela staging
+
+Tabelas:
+- F_INCIDENT -> `f_incident`
+- D_ORGANIZATION -> `d_organization`
+- D_DETECTOR -> `d_detector`
+- D_TIME -> `d_time`
+- D_ALERT -> `d_alert`
+
+Colunas chave e convenções:
+- `<table>_key` : chave surrogate (bigint) PRIMARY KEY
+- `<table>_external_id` : id original do sistema
+- snake_case
+
+Para ver o conteúdo original em markdown: `docs/mnemonicos.md`.
