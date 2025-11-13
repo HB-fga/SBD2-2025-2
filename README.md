@@ -11,12 +11,16 @@ Este projeto contém uma análise exploratória de dados do dataset da competiç
 
 1. **Clone ou baixe este repositório**
 
-2. **Crie um ambiente virtual (recomendado):**
+2. **Baixa o dataset**  
+Faça o download do dataset ```GUIDE_Train.csv``` presente no [Kaggle](https://www.kaggle.com/datasets/Microsoft/microsoft-security-incident-prediction?select=GUIDE_Train.csv) e salve o arquivo em:  
+```data_layer/raw/GUIDE_Train.csv```
+
+1. **Crie um ambiente virtual (recomendado):**
    ```bash
    python -m venv venv
    ```
 
-3. **Ative o ambiente virtual:**
+2. **Ative o ambiente virtual:**
    
    **Windows:**
    ```bash
@@ -28,7 +32,7 @@ Este projeto contém uma análise exploratória de dados do dataset da competiç
    source venv/bin/activate
    ```
 
-4. **Instale as dependências:**
+3. **Instale as dependências:**
    ```bash
    pip install -r requirements.txt
    ```
