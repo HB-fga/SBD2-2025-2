@@ -11,7 +11,7 @@ Este projeto contém uma análise exploratória de dados do dataset da competiç
 
 1. **Clone ou baixe este repositório**
 
-2. **Baixa o dataset**  
+2. **Faça o download do dataset**  
 Faça o download do dataset ```GUIDE_Train.csv``` presente no [Kaggle](https://www.kaggle.com/datasets/Microsoft/microsoft-security-incident-prediction?select=GUIDE_Train.csv) e salve o arquivo em:  
 ```data_layer/raw/GUIDE_Train.csv```
 
