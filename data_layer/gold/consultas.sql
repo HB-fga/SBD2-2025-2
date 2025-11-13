@@ -1,4 +1,4 @@
--- Consultas analíticas empacotadas em `consultas.sql`
+﻿-- Consultas analíticas empacotadas em `consultas.sql`
 
 -- 1) Top 10 organizações por número de incidentes (últimos 30 dias)
 SELECT o.organization_external_id, COUNT(*) AS incidents

@@ -1,96 +1,88 @@
--- ETL: Silver -> Gold (PostgreSQL style)
--- Assunções:
--- 1) Já existe uma tabela staging `stg_security_incident` com colunas que correspondem ao CSV gold.
--- 2) O CSV pode ser carregado usando \copy no psql ou outro mecanismo (ver exemplo mais abaixo).
+﻿-- ETL: Silver -> Gold (PostgreSQL)
+-- Versão limpa e robusta: trata timestamp numérico como chave natural e aceita ISO quando presente
 
--- Exemplo de carregamento local via psql cliente (executar no terminal):
--- \copy stg_security_incident FROM 'data_layer/gold/security_incident_prediction_gold.csv' CSV HEADER;
-
--- 1) Popula dimensão d_time (UPSERT não necessário se sempre geramos novos registros para cada timestamp)
+-- 1) Popula dimensão d_time
 BEGIN;
 
-n-- Insere timestamps únicos em d_time
-INSERT INTO d_time (event_timestamp, event_date, year, month, day, hour, weekday)
+INSERT INTO d_time (time_natural_key, event_timestamp, event_date, year, month, day, hour, weekday)
 SELECT DISTINCT
-    (regexp_replace(trim(timestamp), 'Z$', '', 'g'))::timestamp AS event_timestamp,
-    ((regexp_replace(trim(timestamp), 'Z$', '', 'g'))::timestamp)::date AS event_date,
-    EXTRACT(YEAR FROM (regexp_replace(trim(timestamp), 'Z$', '', 'g'))::timestamp)::int AS year,
-    EXTRACT(MONTH FROM (regexp_replace(trim(timestamp), 'Z$', '', 'g'))::timestamp)::int AS month,
-    EXTRACT(DAY FROM (regexp_replace(trim(timestamp), 'Z$', '', 'g'))::timestamp)::int AS day,
-    EXTRACT(HOUR FROM (regexp_replace(trim(timestamp), 'Z$', '', 'g'))::timestamp)::int AS hour,
-    EXTRACT(DOW FROM (regexp_replace(trim(timestamp), 'Z$', '', 'g'))::timestamp)::int AS weekday
+    CASE WHEN trim(s.timestamp) ~ '^[0-9]+$' THEN trim(s.timestamp)::bigint ELSE NULL END AS time_natural_key,
+    CASE WHEN trim(s.timestamp) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN (regexp_replace(trim(s.timestamp), 'Z$', '', 'g'))::timestamp ELSE NULL END AS event_timestamp,
+    CASE WHEN trim(s.timestamp) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN ((regexp_replace(trim(s.timestamp), 'Z$', '', 'g'))::timestamp)::date ELSE NULL END AS event_date,
+    CASE WHEN trim(s.timestamp) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN EXTRACT(YEAR FROM (regexp_replace(trim(s.timestamp), 'Z$', '', 'g'))::timestamp)::int ELSE NULL END AS year,
+    CASE WHEN trim(s.timestamp) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN EXTRACT(MONTH FROM (regexp_replace(trim(s.timestamp), 'Z$', '', 'g'))::timestamp)::int ELSE NULL END AS month,
+    CASE WHEN trim(s.timestamp) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN EXTRACT(DAY FROM (regexp_replace(trim(s.timestamp), 'Z$', '', 'g'))::timestamp)::int ELSE NULL END AS day,
+    CASE WHEN trim(s.timestamp) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN EXTRACT(HOUR FROM (regexp_replace(trim(s.timestamp), 'Z$', '', 'g'))::timestamp)::int ELSE NULL END AS hour,
+    CASE WHEN trim(s.timestamp) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN EXTRACT(DOW FROM (regexp_replace(trim(s.timestamp), 'Z$', '', 'g'))::timestamp)::int ELSE NULL END AS weekday
 FROM stg_security_incident s
-WHERE s.timestamp IS NOT NULL
-ON CONFLICT DO NOTHING;
+WHERE s.timestamp IS NOT NULL AND trim(s.timestamp) <> ''
+ON CONFLICT (time_natural_key) DO NOTHING;
 
--- 2) Popula dimensão d_organization (upsert)
+COMMIT;
+
+-- 2) Popula dimensões de referência
+BEGIN;
+
 INSERT INTO d_organization (organization_external_id, organization_name)
 SELECT DISTINCT trim(orgid)::varchar AS organization_external_id, NULL::varchar
 FROM stg_security_incident
-WHERE orgid IS NOT NULL
+WHERE orgid IS NOT NULL AND trim(orgid) <> ''
 ON CONFLICT (organization_external_id) DO NOTHING;
 
--- 3) Popula dimensão d_detector
 INSERT INTO d_detector (detector_external_id, detector_name)
 SELECT DISTINCT trim(detectorid)::varchar AS detector_external_id, NULL::varchar
 FROM stg_security_incident
-WHERE detectorid IS NOT NULL
+WHERE detectorid IS NOT NULL AND trim(detectorid) <> ''
 ON CONFLICT (detector_external_id) DO NOTHING;
 
--- 4) Popula dimensão d_alert
 INSERT INTO d_alert (alert_title, category, mitre_techniques)
-SELECT DISTINCT trim(alerttitle)::varchar, trim(category)::varchar, trim(mitretechniques)::text
+SELECT DISTINCT LEFT(trim(alerttitle)::varchar,1000), LEFT(trim(category)::varchar,255), trim(mitretechniques)::text
 FROM stg_security_incident
-WHERE alerttitle IS NOT NULL
+WHERE alerttitle IS NOT NULL AND trim(alerttitle) <> ''
 ON CONFLICT (alert_title, category) DO NOTHING;
 
 COMMIT;
 
--- 5) Popula fato f_incident a partir da staging juntando chaves das dimensões
+-- 3) Popula fato f_incident
 BEGIN;
 
+WITH staging AS (
+  SELECT *,
+    CASE WHEN trim(timestamp) ~ '^[0-9]+$' THEN trim(timestamp)::bigint ELSE NULL END AS _time_natural_key,
+    CASE WHEN trim(timestamp) ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN (regexp_replace(trim(timestamp), 'Z$', '', 'g'))::timestamp ELSE NULL END AS _event_timestamp
+  FROM stg_security_incident
+  WHERE timestamp IS NOT NULL AND trim(timestamp) <> ''
+)
 INSERT INTO f_incident (
     time_key, org_key, det_key, alert_key,
     incident_title, incident_grade, entity_type, evidence_role,
     os_family, os_version, last_verdict, country_code, state, city, raw_event_id
 )
 SELECT
-    t.time_key,
+    COALESCE(dt.time_key, dt_ts.time_key) AS time_key,
     o.org_key,
     d.det_key,
     a.alert_key,
-    s.alerttitle,
-    s.incidentgrade,
-    s.entitytype,
-    s.evidencerole,
-    s.osfamily,
-    s.osversion,
-    s.lastverdict,
-    UPPER(s.countrycode),
-    s.state,
-    s.city,
-    s.raw_event_id
-FROM stg_security_incident s
-LEFT JOIN d_time t ON t.event_timestamp = (regexp_replace(trim(s.timestamp), 'Z$', '', 'g'))::timestamp
+    LEFT(trim(s.alerttitle)::varchar,1000) AS incident_title,
+    LEFT(trim(s.incidentgrade)::varchar,50) AS incident_grade,
+    LEFT(trim(s.entitytype)::varchar,255) AS entity_type,
+    LEFT(trim(s.evidencerole)::varchar,255) AS evidence_role,
+    LEFT(trim(s.osfamily)::varchar,255) AS os_family,
+    LEFT(trim(s.osversion)::varchar,50) AS os_version,
+    LEFT(trim(s.lastverdict)::varchar,255) AS last_verdict,
+    CASE WHEN trim(s.countrycode) = '' THEN NULL ELSE UPPER(LEFT(trim(s.countrycode),2)) END AS country_code,
+    NULLIF(trim(s.state),'') AS state,
+    NULLIF(trim(s.city),'') AS city,
+    NULL::varchar AS raw_event_id
+FROM staging s
 LEFT JOIN d_organization o ON o.organization_external_id = trim(s.orgid)::varchar
 LEFT JOIN d_detector d ON d.detector_external_id = trim(s.detectorid)::varchar
-LEFT JOIN d_alert a ON a.alert_title = trim(s.alerttitle) AND a.category = trim(s.category)
--- Filtrar eventos inválidos (sem timestamp ou orgid)
-WHERE s.timestamp IS NOT NULL
-  AND s.orgid IS NOT NULL
-  -- Opcional: evitar duplicação já registrada (se houver raw_event_id)
-  AND NOT EXISTS (
-      SELECT 1 FROM f_incident f WHERE f.raw_event_id IS NOT NULL AND f.raw_event_id = s.raw_event_id
-  );
+LEFT JOIN d_alert a ON a.alert_title = LEFT(trim(s.alerttitle)::varchar,1000) AND a.category = LEFT(trim(s.category)::varchar,255)
+LEFT JOIN d_time dt ON dt.time_natural_key IS NOT NULL AND dt.time_natural_key = s._time_natural_key
+LEFT JOIN d_time dt_ts ON dt_ts.event_timestamp IS NOT NULL AND dt_ts.event_timestamp = s._event_timestamp
+WHERE s.orgid IS NOT NULL AND trim(s.orgid) <> ''
+;
 
 COMMIT;
 
--- Observações / verificações de integridade
--- 1) Contagens: comparar COUNT(*) entre staging (filtrado) e f_incident
--- 2) Checar NULLs inesperados nas FK: SELECT * FROM f_incident WHERE time_key IS NULL OR org_key IS NULL;
-
--- Exemplo de validação rápida:
--- SELECT COUNT(*) AS staging_total FROM stg_security_incident WHERE timestamp IS NOT NULL AND orgid IS NOT NULL;
--- SELECT COUNT(*) AS fact_total FROM f_incident;
-
--- Se desejar, implementar deduplicação mais avançada (hash do evento, raw_event_id, etc.).
+-- Fim do ETL

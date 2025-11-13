@@ -1,12 +1,13 @@
--- DDL para Star Schema (PostgreSQL)
+﻿-- DDL para Star Schema (PostgreSQL)
 -- Arquivo: ddl.sql (versão empacotada em data_layer/gold)
 
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS d_time (
     time_key BIGSERIAL PRIMARY KEY,
-    event_timestamp TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    event_date DATE NOT NULL,
+    time_natural_key BIGINT,
+    event_timestamp TIMESTAMP WITHOUT TIME ZONE,
+    event_date DATE,
     year integer,
     month integer,
     day integer,
