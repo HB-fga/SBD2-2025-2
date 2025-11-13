@@ -49,7 +49,7 @@ Este projeto contém uma análise exploratória de dados do dataset da competiç
 ```
 sbd2/
 ├── raw/
-│   ├── train.csv                 # Dataset principal
+│   ├── GUIDE_Train.csv                 # Dataset principal
 │   ├── train_analytics.ipynb     # Notebook de análise
 │   └── Dicionário_de_Dados_train.csv.md  # Documentação dos dados
 ├── requirements.txt              # Dependências do projeto
@@ -66,7 +66,7 @@ sbd2/
 
 ## ⚠️ Observações Importantes
 
-- O dataset `train.csv` deve estar presente na pasta `raw/` para que o notebook funcione corretamente
+- O dataset `GUIDE_Train.csv` deve estar presente na pasta `raw/` para que o notebook funcione corretamente
 - O dataset é grande e pode consumir bastante memória RAM
 - Certifique-se de ter pelo menos 8GB de RAM disponível para uma execução fluida
 
