@@ -13,7 +13,7 @@ Este projeto contém uma análise exploratória de dados do dataset da competiç
 
 2. **Faça o download do dataset**  
 Faça o download do dataset ```GUIDE_Train.csv``` presente no [Kaggle](https://www.kaggle.com/datasets/Microsoft/microsoft-security-incident-prediction?select=GUIDE_Train.csv) e salve o arquivo em:  
-```data_layer/raw/GUIDE_Train.csv```
+```data_layer/raw/dados_brutos.csv```
 
 1. **Crie um ambiente virtual (recomendado):**
    ```bash
@@ -53,9 +53,9 @@ Faça o download do dataset ```GUIDE_Train.csv``` presente no [Kaggle](https://w
 ```
 sbd2/
 ├── raw/
-│   ├── GUIDE_Train.csv                 # Dataset principal
+│   ├── dados_brutos.csv                 # Dataset principal
 │   ├── train_analytics.ipynb     # Notebook de análise
-│   └── Dicionário_de_Dados_train.csv.md  # Documentação dos dados
+│   └── dicionário_de_dados_.pdf  # Documentação dos dados
 ├── requirements.txt              # Dependências do projeto
 └── README.md                     # Este arquivo
 ```-->
