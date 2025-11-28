@@ -1,3 +1,5 @@
 venv
 data_layer/raw/GUIDE_Train.csv
+data_layer/raw/dados_brutos.csv
+data_layer/raw/parquet_parts
 **/.ipynb_checkpoints/
