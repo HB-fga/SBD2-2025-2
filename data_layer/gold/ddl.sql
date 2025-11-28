@@ -11,9 +11,10 @@ DROP TABLE IF EXISTS dw.dim_tmp;
 DROP TABLE IF EXISTS dw.dim_org;
 DROP TABLE IF EXISTS dw.dim_sis;
 
-
-
-CREATE TABLE dw.Dim_tmp (
+-- ============================
+-- DIMENSÃO TEMPO
+-- ============================
+CREATE TABLE dw.dim_tmp (
     srk_tmp INT PRIMARY KEY,
     tsp VARCHAR(30) NOT NULL
 );
@@ -21,7 +22,7 @@ CREATE TABLE dw.Dim_tmp (
 -- ============================
 -- DIMENSÃO ORGANIZAÇÃO
 -- ============================
-CREATE TABLE dw.Dim_org (
+CREATE TABLE dw.dim_org (
     srk_org INT PRIMARY KEY,
     acc_sid INT,
     acc_upn INT,
@@ -33,7 +34,7 @@ CREATE TABLE dw.Dim_org (
 -- ============================
 -- DIMENSÃO SISTEMA/ENTIDADE
 -- ============================
-CREATE TABLE dw.Dim_sis (
+CREATE TABLE dw.dim_sis (
     srk_sis INT PRIMARY KEY,
     dev_id INT,
     sha INT,
@@ -48,20 +49,18 @@ CREATE TABLE dw.Dim_sis (
 -- ============================
 -- TABELA FATO: INCIDENTES
 -- ============================
-CREATE TABLE dw.Fat_inc (
+CREATE TABLE dw.fat_inc (
     srk_inc INT PRIMARY KEY,
-    srk_tmp REFERENCES Dim_tmp(srk_tmp),
-    srk_org REFERENCES Dim_org(srk_org),
-    srk_sis REFERENCES Dim_sis(srk_sis),
+    srk_tmp INT REFERENCES dw.dim_tmp(srk_tmp),
+    srk_org INT REFERENCES dw.dim_org(srk_org),
+    srk_sis INT REFERENCES dw.dim_sis(srk_sis),
     alt_id INT,
     cat VARCHAR(30),
     mtr_tcn VARCHAR(100),
     inc_gde VARCHAR(20),
-    evd_rol ENUM('Related','Impacted'),
+    evd_rol VARCHAR(20),
     lst_vrd VARCHAR(20),
-
-
-    CONSTRAINT fk_tmp FOREIGN KEY (srk_tmp) REFERENCES DimTempo(srk_tmp),
-    CONSTRAINT fk_org FOREIGN KEY (srk_org) REFERENCES DimOrganizacao(srk_org),
-    CONSTRAINT fk_sis FOREIGN KEY (srk_sis) REFERENCES DimSistema(srk_sis)
+    CONSTRAINT fk_tmp FOREIGN KEY (srk_tmp) REFERENCES dw.dim_tmp(srk_tmp),
+    CONSTRAINT fk_org FOREIGN KEY (srk_org) REFERENCES dw.dim_org(srk_org),
+    CONSTRAINT fk_sis FOREIGN KEY (srk_sis) REFERENCES dw.dim_sis(srk_sis)
 );
