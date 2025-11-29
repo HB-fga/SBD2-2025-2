@@ -71,11 +71,11 @@ ORDER BY total_incidentes DESC
 LIMIT 5;
 
 -- =====================================================
--- Q5 - Incidentes por país (Top 5)
--- Resultado: country_code, contagem
+-- Q5 - Incidentes por estado (Top 5)
+-- Resultado: state, contagem
 -- =====================================================
 SELECT
-  COALESCE(o.ctr_cod::text, 'unknown') AS country_code,
+  COALESCE(o.sta::text, 'unknown') AS state,
   COUNT(*) AS total_incidentes
 FROM dw.fat_inc f
 LEFT JOIN dw.dim_org o ON f.srk_org = o.srk_org
@@ -84,14 +84,15 @@ ORDER BY total_incidentes DESC
 LIMIT 5;
 
 -- =====================================================
--- Q6 - Análise por Sistema Operacional (OS family mais atacado)
--- Resultado: os_family, contagem
+-- Q6 - Incidentes por cidade (Top 10)
+-- Resultado: city, contagem
+-- Observação: agora usamos dim_org para obter a cidade
 -- =====================================================
 SELECT
-  COALESCE(s.osf::text, 'unknown') AS os_family,
+  COALESCE(o.cty::text, 'unknown') AS city,
   COUNT(*) AS total_incidentes
 FROM dw.fat_inc f
-LEFT JOIN dw.dim_sis s ON f.srk_sis = s.srk_sis
+LEFT JOIN dw.dim_org o ON f.srk_org = o.srk_org
 GROUP BY 1
 ORDER BY total_incidentes DESC
 LIMIT 10;
